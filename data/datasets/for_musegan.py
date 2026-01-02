@@ -8,7 +8,6 @@ from tqdm import tqdm
 
 from .base import BaseDataset
 from .utils.downloader import Downloader, DownloadError
-from tqdm import tqdm
 import gdown
 from typing import Callable
 
@@ -88,15 +87,39 @@ class MuseGANDatasetPP(BaseDataset):
         self.normalize = normalize
         self.expected_tracks = expected_tracks
 
-        self.data = load_data(data_source, self._create_path())
-        if len(self.data.shape) == 3:
-            self.data = np.expand_dims(self.data, 0)
+        # self.data = load_data(data_source, self._create_path())
+        # if len(self.data.shape) == 3:
+        #     self.data = np.expand_dims(self.data, 0)
 
-        self.data = self.data.astype(np.float32)
-        if self.normalize:
-            self.data /= np.max(self.data) if np.max(self.data) > 0 else 1
+        # self.data = self.data.astype(np.float32)
+        # if self.normalize:
+        #     self.data /= np.max(self.data) if np.max(self.data) > 0 else 1
 
-        self.num_samples = self.data.shape[0]
+        # self.num_samples = self.data.shape[0]
+
+        nonzero = np.load(os.path.join(self.root, "data/raw/nonzero.npy"), mmap_mode="r")
+        full_shape = np.load(os.path.join(self.root, "data/raw/shape.npy"))
+
+        sample_shape = tuple(full_shape[1:])
+        
+        nz_samples = nonzero[0]
+        ptrs = np.searchsorted(nz_samples, np.arange(self.num_samples + 1))
+        
+        self.data = []
+        for idx in range(self.num_samples):
+            start, end = ptrs[idx], ptrs[idx+1]
+            dense_sample = np.zeros(sample_shape, dtype=np.float32)
+
+            if start < end:
+                coords = nonzero[1:, start:end]
+                dense_sample[tuple(coords)] = 1.0
+
+            if self.normalize:
+                m = dense_sample.max()
+                if m > 0:
+                    dense_sample /= m
+            
+            self.data.append(torch.from_numpy(dense_sample))
 
     def __len__(self):
         return self.num_samples
@@ -116,10 +139,6 @@ class MuseGANDatasetPP(BaseDataset):
     def download(self) -> None:
         # self.url = "http://hog.ee.columbia.edu/craffel/lmd/lmd_full.tar.gz"
         url = "https://drive.google.com/file/d/1pxrrjuymFnNeXGDDpDrLXpyl6y_5mEgj/view?usp=sharing"
-        dest_path = os.path.join(
-            self.root,
-            "train",
-        )
         dataset_path = self._create_path()
         os.makedirs(os.path.dirname(dataset_path), exist_ok=True)
         gdown.download(url, dataset_path, quiet=False)

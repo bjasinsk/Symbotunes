@@ -3,6 +3,8 @@ _data
 wandb
 logs
 samples
+*.npy
+*.npz
 
 # vscode
 .vscode
