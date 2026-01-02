@@ -1,6 +1,7 @@
 from .base import BaseDataset
 from .folk_rnn import FolkRnnDataset
 from .lakh import LakhMidiDataset
+from .for_musegan import MuseGANDatasetPP
 
 
 def get_dataset(name: str, config: dict) -> BaseDataset:
@@ -10,5 +11,7 @@ def get_dataset(name: str, config: dict) -> BaseDataset:
             return FolkRnnDataset(**config)
         case "lakh":
             return LakhMidiDataset(**config)
+        case "for_musegan":
+            return MuseGANDatasetPP()
         case _:
             raise NotImplementedError()
