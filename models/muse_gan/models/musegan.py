@@ -1,7 +1,8 @@
 from typing import Any
 import torch
 import torch.nn as nn
-import lightning as L
+import pytorch_lightning as pl
+# import lightning as L
 from loguru import logger
 
 # from models.generator import BarGenerator
@@ -12,11 +13,10 @@ from .discriminator import Discriminator
 from .generator import TemporalGenerator
 
 
-class MuseGAN(L.LightningModule):
+class MuseGAN(pl.LightningModule):
     def __init__(
         self,
         config: dict[str, Any],
-        generator: list[BarGenerator] | None = None,
         temp_generator: list[TemporalGenerator] | None = None,
         discriminator: Discriminator | None = None,
     ) -> None:
@@ -43,7 +43,6 @@ class MuseGAN(L.LightningModule):
 
     def forward(self, batch_size = 1):
         bars = []
-
         # Pierwszy etap
         z_t = self.g_temp(torch.rand(batch_size, self.g_temp.latent_dim).to(self.device))
         z_t_tracks = [g_temp_track(torch.rand(batch_size, g_temp_track.latent_dim).to(self.device)) for g_temp_track in self.g_temp_tracks]
@@ -76,7 +75,7 @@ class MuseGAN(L.LightningModule):
         g_temp_optimizers = optimizers[2 : 2 + len(self.g_temp_tracks)]
         bar_generators_optimizers = optimizers[2 + len(self.g_temp_tracks) :]
 
-        real = batch
+        real = batch[0]
         BATCH, BAR, PITCH, NOTE, TRACK = real.shape
 
         real = real.permute(0, 4, 1, 2, 3)
@@ -108,106 +107,6 @@ class MuseGAN(L.LightningModule):
         gen_loss = self._gen_loss(fake)
         
         self.manual_backward(gen_loss)
-        g_temp_optimizer.step()
-        
-        for g_temp_opt in g_temp_optimizers:
-            g_temp_opt.step()
-
-        for bar_generator_opt in bar_generators_optimizers:
-            bar_generator_opt.step()
-
-        self.log_dict({"Loss/D": dis_loss, "Loss/G": gen_loss, "Loss/GP": grad_penalty}, on_epoch=True, prog_bar=True)
-
-    def training_step_old(self, batch: torch.Tensor, batch_idx: int) -> None:
-        # d_optimizer, g_temp_optimizer, g_temp_optimizers, bar_generators_optimizers = self.optimizers()
-        optimizers = self.optimizers()
-        d_optimizer = optimizers[0]
-        g_temp_optimizer = optimizers[1]
-        g_temp_optimizers = optimizers[2 : 2 + len(self.g_temp_tracks)]
-        bar_generators_optimizers = optimizers[2 + len(self.g_temp_tracks) :]
-
-        real = batch
-        BATCH, BAR, PITCH, NOTE, TRACK = real.shape
-
-        real = real.permute(0, 4, 1, 2, 3)
-        bars = []
-
-        # with torch.no_grad():
-        z_t = self.g_temp(torch.rand(BATCH, self.g_temp.latent_dim).to(self.device))
-        #     z_t_tracks_for_D = [
-        #         g_temp_track(torch.rand(BATCH, g_temp_track.latent_dim, device=self.device))
-        #         for g_temp_track in self.g_temp_tracks
-        #     ]
-
-
-        z_t_tracks = [g_temp_track(torch.rand(BATCH, g_temp_track.latent_dim).to(self.device)) for g_temp_track in self.g_temp_tracks]
-        # print("real shape:", real.shape)
-        assert all(z_t_track.size(2) == z_t.size(2) for z_t_track in z_t_tracks) # tu zmieniłęm na for_D
-        fake = []
-        for i in range(z_t.size(2)):
-        # for i, optimizer in enumerate(g_temp_optimizers):
-            z_t_squeezed = torch.squeeze(z_t[:, :, i])
-            z = torch.rand(z_t_squeezed.shape).to(self.device)
-            z_concat = torch.cat([z, z_t_squeezed], dim=1)
-            # print("z_concat: ", z_concat.shape)
-            
-            z_t_tracks_squeezed = [torch.squeeze(z_t_track[:, :, i]) for z_t_track in z_t_tracks] # tu zmieniłem na for_D
-            z_tracks = [torch.rand(z_t_track_squeezed.shape).to(self.device) for z_t_track_squeezed in z_t_tracks_squeezed]
-            z_tracks_concat = [torch.cat([z_track, z_t_track_squeezed], dim=1) for (z_track, z_t_track_squeezed) in zip(z_tracks, z_t_tracks_squeezed)]
-            # print("z_track_concat: ", z_tracks_concat[0].shape)
-            z_tracks_concat_concat = [torch.cat([z_concat, z_track_concat], dim=1) for z_track_concat in z_tracks_concat]
-            # print(f"Concat_concat_shape: {z_tracks_concat_concat[0].shape}")
-
-            bars = [bar_generator_i(z_tracks_concat_concat_i.unsqueeze(-1).unsqueeze(-1)) for z_tracks_concat_concat_i, bar_generator_i in zip(z_tracks_concat_concat, self.bar_generators)]
-            bars_concat = torch.cat(bars, dim=1).unsqueeze(2)
-            fake.append(bars_concat)
-            # print("z_concat: ", z_concat.shape)
-            # bar = torch.sigmoid(vbbrator(z_concat).detach())
-            # bar = bar.unsqueeze(2)
-            # bars.append(bar)
-        fake = torch.cat(fake, dim=2)
-        dis_real = self.discriminator(real)  # B x 5(track) x 4(bar) x 96(time step) x 84(note)
-        dis_fake = self.discriminator(fake.detach())
-
-        grad_penalty = self._get_gradient_penalty(real, fake.detach())
-        dis_loss = self._dis_loss(dis_fake, dis_real, grad_penalty)
-
-        d_optimizer.zero_grad(set_to_none=True)
-        self.manual_backward(dis_loss)
-        d_optimizer.step()
-
-        # g_optimizer.zero_grad(set_to_none=True)
-        g_temp_optimizer.zero_grad(set_to_none=True)
-
-        for opt in g_temp_optimizers:
-            opt.zero_grad(set_to_none=True)
-
-        for opt in bar_generators_optimizers:
-            opt.zero_grad(set_to_none=True)
-
-        fake = []
-        # dla Gnerator temp inny z_t niż dla dyscriminatora
-        # z_t = self.g_temp(torch.rand(BATCH, self.g_temp.latent_dim).to(self.device))
-        for i in range(z_t.size(2)):
-        # for i, optimizer in enumerate(g_temp_optimizers):
-            z_t_squeezed = torch.squeeze(z_t[:, :, i])
-            z = torch.rand(z_t_squeezed.shape).to(self.device)
-            z_concat = torch.cat([z, z_t_squeezed], dim=1)
-            
-            z_t_tracks_squeezed = [torch.squeeze(z_t_track[:, :, i]) for z_t_track in z_t_tracks]
-            z_tracks = [torch.rand(z_t_track_squeezed.shape).to(self.device) for z_t_track_squeezed in z_t_tracks_squeezed]
-            z_tracks_concat = [torch.cat([z_track, z_t_track_squeezed], dim=1) for (z_track, z_t_track_squeezed) in zip(z_tracks, z_t_tracks_squeezed)]
-            z_tracks_concat_concat = [torch.cat([z_concat, z_track_concat], dim=1) for z_track_concat in z_tracks_concat]
-
-            bars = [bar_generator_i(z_tracks_concat_concat_i.unsqueeze(-1).unsqueeze(-1)) for z_tracks_concat_concat_i, bar_generator_i in zip(z_tracks_concat_concat, self.bar_generators)]
-            bars_concat = torch.cat(bars, dim=1).unsqueeze(2)
-            fake.append(bars_concat)
-        fake = torch.cat(fake, dim=2)
-        gen_loss = self._gen_loss(fake)
-        
-        self.manual_backward(gen_loss)
-        # g_optimizer.step()
-
         g_temp_optimizer.step()
         
         for g_temp_opt in g_temp_optimizers:

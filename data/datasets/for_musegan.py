@@ -97,8 +97,11 @@ class MuseGANDatasetPP(BaseDataset):
 
         # self.num_samples = self.data.shape[0]
 
-        nonzero = np.load(os.path.join(self.root, "data/raw/nonzero.npy"), mmap_mode="r")
-        full_shape = np.load(os.path.join(self.root, "data/raw/shape.npy"))
+        nonzero_path, shape_path = self._create_path()
+        nonzero = np.load(nonzero_path, mmap_mode="r", allow_pickle=True)
+        full_shape = np.load(shape_path)
+
+        self.num_samples = nonzero.data.shape[0]
 
         sample_shape = tuple(full_shape[1:])
         
@@ -134,18 +137,21 @@ class MuseGANDatasetPP(BaseDataset):
         return pianoroll
     
     def _create_path(self):
-        return os.path.join(self.root, "train", "train_x_lpd_5_phr.npz")
+        dataset_path = os.path.join(self.root, "train", "train_x_lpd_5_phr.npy")
+        shape_path = os.path.join(self.root, "train", "train_x_lpd_5_phr_shape.npy")
+        return (dataset_path, shape_path)
 
     def download(self) -> None:
-        # self.url = "http://hog.ee.columbia.edu/craffel/lmd/lmd_full.tar.gz"
-        url = "https://drive.google.com/file/d/1pxrrjuymFnNeXGDDpDrLXpyl6y_5mEgj/view?usp=sharing"
-        dataset_path = self._create_path()
-        os.makedirs(os.path.dirname(dataset_path), exist_ok=True)
-        gdown.download(url, dataset_path, quiet=False)
+        dataset_url = "https://drive.google.com/uc?id=1w7B3aM0Z3afD8JdCvwyzIKUqsrXlfH-8"
+        shape_url = "https://drive.google.com/uc?id=1nc9CwasLXnwRpI2y6he-jSkei19gf_gd"
+        for path, url in zip(self._create_path(), (dataset_url, shape_url)):
+            if not self.replace_if_exists and os.path.exists(path):
+                print(f"Dataset directory already exists. Skipping download for {path}.")
+                continue
 
-        if not self.replace_if_exists and os.path.exists(dataset_path):
-            print("Dataset directory already exists. Skipping download.")
-            return
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            gdown.download(url, path, quiet=False)
+
 
 # ------------------------------
 # Example usage
