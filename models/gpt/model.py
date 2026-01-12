@@ -3,7 +3,8 @@ import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..base import BaseModel
+import pytorch_lightning as pl
+from ..base import BaseModel, OutputType
 
 
 def gelu(x):
@@ -130,7 +131,7 @@ class Block(nn.Module):
         return x, present
 
 
-class GPT2(BaseModel):
+class GPT2(BaseModel, pl.LightningModule):
     def __init__(
         self,
         n_vocab,
@@ -254,3 +255,7 @@ class GPT2(BaseModel):
             samples += [sample for sample in batch[ended]]
             batch = batch[~ended]
         return samples
+
+    @staticmethod
+    def get_produced_type() -> OutputType:
+        raise NotImplementedError("get_produced_type not implemented.")

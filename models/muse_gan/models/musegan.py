@@ -4,6 +4,7 @@ import torch.nn as nn
 import pytorch_lightning as pl
 # import lightning as L
 from loguru import logger
+from models.base import BaseModel, OutputType
 
 # from models.generator import BarGenerator
 # from models.discriminator import Discriminator
@@ -13,7 +14,7 @@ from .discriminator import Discriminator
 from .generator import TemporalGenerator
 
 
-class MuseGAN(pl.LightningModule):
+class MuseGAN(BaseModel, pl.LightningModule):
     def __init__(
         self,
         config: dict[str, Any],
@@ -65,8 +66,14 @@ class MuseGAN(pl.LightningModule):
         
         return generated_bars
     
-    def sample(self, batch_size = 1):
-        return self.forward(batch_size)
+    @torch.no_grad()
+    def sample(self, batch_size: int) -> list[torch.Tensor] | torch.Tensor:
+        bars_prepared = [torch.cat(bar, dim=1).unsqueeze(2) for bar in self.forward(batch_size)]
+        return torch.cat(bars_prepared, dim=2)
+    
+    @staticmethod
+    def get_produced_type() -> OutputType:
+        return OutputType.PYPiano
 
     def training_step(self, batch: torch.Tensor, batch_idx: int) -> None:
         optimizers = self.optimizers()
@@ -147,10 +154,3 @@ class MuseGAN(pl.LightningModule):
         optimizers.extend([torch.optim.Adam(g_temp_track.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)) for g_temp_track in self.g_temp_tracks])
         optimizers.extend([torch.optim.Adam(bar_generator.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)) for bar_generator in self.bar_generators])
         return optimizers
-
-        # return (
-        #     torch.optim.Adam(self.discriminator.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)),
-        #     torch.optim.Adam(self.g_temp.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)),
-        #     [torch.optim.Adam(g_temp_track.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)) for g_temp_track in self.g_temp_tracks],
-        #     [torch.optim.Adam(bar_generator.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)) for bar_generator in self.bar_generators],
-        # ) # (discriminator_optimizer, g_temp_optimizer, [g_temp_optimizers], [bar_generator_optimizers])

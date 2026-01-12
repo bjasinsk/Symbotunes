@@ -1,19 +1,21 @@
 import pypianoroll
 import pretty_midi
+from data.converters.base import Converter
 
 
-class MidiToPianoroll:
+class MidiToPianoroll(Converter):
     """
     Interface for MIDI to pianoroll conversion.
     """
 
-    @staticmethod
-    def convert_from_file(midi_path: str):
-        return pypianoroll.read(midi_path)
+    def convert_from_file(self, file_path: str):
+        return pypianoroll.read(file_path)
 
-    @staticmethod
     def convert_from_prett_midi(midi: pretty_midi.PrettyMIDI):
         return pypianoroll.from_pretty_midi(midi)
+    
+    def save_to_file(self, file_path: str) -> None:
+        raise NotImplementedError("save_to_file not implemented.")
 
     @staticmethod
     def plot(pianoroll: pypianoroll.Multitrack, save_path: str, number_of_beats: int = -1):

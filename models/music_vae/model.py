@@ -4,8 +4,9 @@ import torch.nn.functional as F
 from torch.distributions.normal import Normal
 from torch.distributions.kl import kl_divergence
 from torch.optim.lr_scheduler import ExponentialLR
+import pytorch_lightning as pl
 from ..base import BaseModel
-
+from models.base import BaseModel, OutputType
 
 class Encoder(nn.Module):
     def __init__(
@@ -135,7 +136,7 @@ class Decoder(nn.Module):
         return notes
 
 
-class MusicVae(BaseModel):
+class MusicVae(BaseModel, pl.LightningModule):
     """
     Music Vae model based on https://arxiv.org/pdf/1803.05428.
     Original code base: https://github.com/magenta/magenta/blob/main/magenta/models/music_vae
@@ -225,3 +226,8 @@ class MusicVae(BaseModel):
         batch = torch.randn(batch_size, self.decoder.z_size).to(self.device)
         samples = self.decoder(batch)
         return samples
+
+    @staticmethod
+    def get_produced_type() -> OutputType:
+        # TODO: Return the correct output type
+        return OutputType.UNDETERMINED

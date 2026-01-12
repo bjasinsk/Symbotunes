@@ -6,8 +6,11 @@ from pathlib import Path
 
 from models import get_model
 from data.tokenizers import FolkTokenizer
-from data.converters.abc_to_midi_converter import ABCTOMidiConverter
 
+from data.converters.base import Converter
+from data.converters.converter_stub import ConverterStub
+from scripts.converter_factory import produce_converter
+from models.base import OutputType
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -35,18 +38,22 @@ if __name__ == "__main__":
         model.to(torch.device("cuda"))
 
     model.eval()
+    print(batch_size)
     samples = model.sample(batch_size)
-
+    
     # TODO handle other tokenizers. Maybe read the what tokenizer should be used from config somehow. Otherwise, if
     # getting tokenizer type from config file is ugly then either add argument to argparser, or even add the
     # converter to config file. Or maybe do something else entirely, I dunno.
-    tokenizer = FolkTokenizer()
-    converter = ABCTOMidiConverter(tokenizer)
 
+    # TODO: Use produce_converter when all converters are implemented and handled.
+    # src_type = model.get_produced_type()
+    # dst_type = OutputType.MIDI
+    # converter = produce_converter(src_type, dst_type, FolkTokenizer()) 
+    converter = ConverterStub()
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     for i, sample in enumerate(samples):
         try:
-            converter(sample.cpu(), os.path.join(out_path, f"sample_{i}.mid"))
-        except Exception:
-            print(f"Invalid format of sample {i}")
+            converter.save_to_file(sample.cpu(), os.path.join(out_path, f"sample_{i}.mid"))
+        except Exception as e:
+            print(f"Invalid format of sample {i}, skipping. Error: {e}")

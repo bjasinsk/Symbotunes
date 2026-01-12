@@ -6,7 +6,7 @@ from torch.optim import RMSprop
 from torch.optim.lr_scheduler import LambdaLR
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-from ..base import BaseModel
+from ..base import BaseModel, OutputType
 
 
 class FolkRNN(BaseModel):
@@ -122,3 +122,7 @@ class FolkRNN(BaseModel):
             lengths = lengths[~ended.cpu()]
             lengths += 1
         return samples
+
+    @staticmethod
+    def get_produced_type() -> OutputType:
+        return OutputType.ABC

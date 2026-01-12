@@ -33,7 +33,7 @@ model:
       training:
             max_steps: 1000
             log_steps: 50
-            save_checkpoints_steps: 500
+            save_checkpoints_steps: 5
             d_steps: 5
             g_steps: 1
             warmup_steps: 5
