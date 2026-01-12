@@ -11,10 +11,10 @@ class MidiToPianoroll(Converter):
     def convert_from_file(self, file_path: str):
         return pypianoroll.read(file_path)
 
-    def convert_from_prett_midi(midi: pretty_midi.PrettyMIDI):
+    def convert_from_data(self, midi: pretty_midi.PrettyMIDI):
         return pypianoroll.from_pretty_midi(midi)
     
-    def save_to_file(self, file_path: str) -> None:
+    def save_to_file(self, data, file_path: str) -> None:
         raise NotImplementedError("save_to_file not implemented.")
 
     @staticmethod
