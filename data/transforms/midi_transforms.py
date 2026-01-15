@@ -41,7 +41,9 @@ class SampleBars(object):
 
     def __call__(self, tokens: TokSequence) -> TokSequence:
         token_names = tokens.tokens
-        bar_positions = [i for i, token in enumerate(token_names) if token.startswith("Bar_")]
+        bar_positions = [
+            i for i, token in enumerate(token_names) if token.startswith("Bar_")
+        ]
 
         if len(bar_positions) < self.num_bars:
             return tokens

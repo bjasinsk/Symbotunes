@@ -1,5 +1,4 @@
 from ..tokenizers import FolkTokenizer
-from random import randint
 
 
 class FolkTransform(object):

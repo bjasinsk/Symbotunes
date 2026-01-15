@@ -8,13 +8,30 @@ class BarEncoder(nn.Module):
         self.input_channels = input_channels
         self.block = nn.ModuleList(
             [
-                nn.Conv2d(in_channels=input_channels, out_channels=16, kernel_size=(1, 12), stride=(1, 12)),
-                nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(1, 7), stride=(1, 7)),
-                nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(3, 1), stride=(3, 1)),
-                nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(2, 1), stride=(2, 1)),
-                nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(2, 1), stride=(2, 1)),
-                nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(2, 1), stride=(2, 1)),
-                nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(2, 1), stride=(2, 1)),
+                nn.Conv2d(
+                    in_channels=input_channels,
+                    out_channels=16,
+                    kernel_size=(1, 12),
+                    stride=(1, 12),
+                ),
+                nn.Conv2d(
+                    in_channels=16, out_channels=16, kernel_size=(1, 7), stride=(1, 7)
+                ),
+                nn.Conv2d(
+                    in_channels=16, out_channels=16, kernel_size=(3, 1), stride=(3, 1)
+                ),
+                nn.Conv2d(
+                    in_channels=16, out_channels=16, kernel_size=(2, 1), stride=(2, 1)
+                ),
+                nn.Conv2d(
+                    in_channels=16, out_channels=16, kernel_size=(2, 1), stride=(2, 1)
+                ),
+                nn.Conv2d(
+                    in_channels=16, out_channels=16, kernel_size=(2, 1), stride=(2, 1)
+                ),
+                nn.Conv2d(
+                    in_channels=16, out_channels=16, kernel_size=(2, 1), stride=(2, 1)
+                ),
             ]
         )
 

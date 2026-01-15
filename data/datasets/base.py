@@ -58,7 +58,10 @@ class BaseDataset(data.Dataset, ABC):
 
     def split_data(self, data: np.ndarray) -> np.ndarray:
         train_data, temp_data = train_test_split(
-            data, train_size=self.train_size, shuffle=True, random_state=self.random_state
+            data,
+            train_size=self.train_size,
+            shuffle=True,
+            random_state=self.random_state,
         )
         val_data, test_data = train_test_split(
             temp_data,
@@ -74,7 +77,9 @@ class BaseDataset(data.Dataset, ABC):
         elif self.split == "test":
             return test_data
         else:
-            raise ValueError(f"Invalid split name: {self.split}. Expected one of ['train', 'val', 'test']")
+            raise ValueError(
+                f"Invalid split name: {self.split}. Expected one of ['train', 'val', 'test']"
+            )
 
     def __getitem__(self, index) -> torch.Tensor | np.ndarray:
         data = self.data[index]

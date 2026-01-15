@@ -12,7 +12,7 @@ class ABCTOMidiConverter(Converter):
     def _reformat_notes(self, notes: List[str]):
         notes.insert(1, "L: 1/8")
         notes.insert(3, "\n")
-        notes.insert(2, "\n")   
+        notes.insert(2, "\n")
         notes.insert(1, "\n")
         return notes
 
@@ -32,7 +32,6 @@ class ABCTOMidiConverter(Converter):
         data_stream = self._convert_abc_to_midi(notes_string)
         return data_stream
 
-    def save_to_file(self, encodings, file_path: str="output.mid") -> None:
+    def save_to_file(self, encodings, file_path: str = "output.mid") -> None:
         data_stream = self.convert_from_data(encodings)
         data_stream.write("midi", fp=file_path)
-        

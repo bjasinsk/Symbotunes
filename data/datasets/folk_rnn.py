@@ -23,7 +23,15 @@ class FolkRnnDataset(BaseDataset):
         **kwargs,
     ) -> None:
         self.data_type = data_type
-        super().__init__(root, split, download, replace_if_exists, transform, target_transform, **kwargs)
+        super().__init__(
+            root,
+            split,
+            download,
+            replace_if_exists,
+            transform,
+            target_transform,
+            **kwargs,
+        )
         # NOTE maybe add midi version of the dataset
         # if data_type == "midi":
         #     self.file_list = glob.glob(os.path.join(os.path.join(self.root, "session_test"),"*.mid"))
@@ -35,7 +43,9 @@ class FolkRnnDataset(BaseDataset):
             self.data = self.split_data(full_data)
 
         else:
-            raise ValueError(f"{data_type} is not an allowed data type for this dataset")
+            raise ValueError(
+                f"{data_type} is not an allowed data type for this dataset"
+            )
 
     def download(self) -> None:
         if self.data_type == "tokenized_ABC":

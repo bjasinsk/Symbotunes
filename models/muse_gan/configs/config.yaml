@@ -37,6 +37,7 @@ model:
             d_steps: 5
             g_steps: 1
             warmup_steps: 5
+            lambda_gp: 10.0
 
 dataloaders:
   validation:
@@ -47,8 +48,8 @@ dataloaders:
     data_type: "tokenized_ABC"
     transforms:
       - folk_rnn:    
-    batch_size: 64
-    num_workers: 16
+    batch_size: 128
+    num_workers: 8
     collate_fn: "pad_collate_single_sequence"
 
   train:
@@ -61,14 +62,14 @@ dataloaders:
         transforms:
           - folk_rnn:
         
-        batch_size: 64
-        num_workers: 16
+        batch_size: 128
+        num_workers: 8
         collate_fn: "pad_collate_single_sequence"
 
 lightning:
   trainer:
     benchmark: True
-    max_epochs: 100
+    max_epochs: 200
 
 callbacks:
   - model_checkpoint:

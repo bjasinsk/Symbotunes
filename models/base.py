@@ -2,10 +2,12 @@ from abc import ABC, abstractmethod
 import torch
 from enum import Enum
 
+
 class OutputType(Enum):
     MIDI = "midi"
     PYPiano = "pypiano"
     ABC = "abc"
+
 
 class BaseModel(ABC):
     """Base model for the repo"""

@@ -8,7 +8,11 @@ from ..base import BaseModel, OutputType
 
 
 def gelu(x):
-    return 0.5 * x * (1 + torch.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * torch.pow(x, 3))))
+    return (
+        0.5
+        * x
+        * (1 + torch.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * torch.pow(x, 3))))
+    )
 
 
 class Norm(nn.Module):
@@ -52,7 +56,9 @@ class MultiheadAttention(nn.Module):
 
         self.c_attn = Conv1D(n_state * 3, nx)
         self.c_proj = Conv1D(n_state, nx)
-        self.register_buffer("bias", torch.tril(torch.ones(n_ctx, n_ctx)).view(1, 1, n_ctx, n_ctx))
+        self.register_buffer(
+            "bias", torch.tril(torch.ones(n_ctx, n_ctx)).view(1, 1, n_ctx, n_ctx)
+        )
 
     def split_heads(self, x, k=False):
         new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)
@@ -145,7 +151,7 @@ class GPT2(BaseModel, pl.LightningModule):
         start_token: int = 135,
         end_token: int = 136,
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.n_vocab = n_vocab
@@ -175,7 +181,6 @@ class GPT2(BaseModel, pl.LightningModule):
         self.decoder.weight = model_embeddings_weights
 
     def forward(self, input_ids, position_ids=None, past=None):
-
         if past is None:
             past_length = 0
             past = [None] * len(self.h)
@@ -184,7 +189,10 @@ class GPT2(BaseModel, pl.LightningModule):
 
         if position_ids is None:
             position_ids = torch.arange(
-                past_length, input_ids.size(-1) + past_length, dtype=torch.long, device=input_ids.device
+                past_length,
+                input_ids.size(-1) + past_length,
+                dtype=torch.long,
+                device=input_ids.device,
             )
             position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
 
@@ -216,7 +224,10 @@ class GPT2(BaseModel, pl.LightningModule):
     def _step(self, batch) -> torch.Tensor:
         x, lengths = batch
         y = x[:, 1:]
-        mask = (torch.arange(x.shape[1], device=self.device).unsqueeze(0) < lengths.unsqueeze(1)).float()
+        mask = (
+            torch.arange(x.shape[1], device=self.device).unsqueeze(0)
+            < lengths.unsqueeze(1)
+        ).float()
         mask = mask[:, 1:]
         out, _ = self(x)
         d1, d2, d3 = out.shape
@@ -230,12 +241,16 @@ class GPT2(BaseModel, pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         loss = self._step(batch)
-        self.log("train/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+        self.log(
+            "train/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True
+        )
         return loss
 
     def validation_step(self, batch, batch_idx):
         loss = self._step(batch)
-        self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True)
+        self.log(
+            "val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True
+        )
         return loss
 
     def configure_optimizers(self):
@@ -243,7 +258,9 @@ class GPT2(BaseModel, pl.LightningModule):
 
     @torch.no_grad()
     def sample(self, batch_size: int) -> list[torch.Tensor]:
-        batch = torch.tensor([[self.start_token] for _ in range(batch_size)], device=self.device)
+        batch = torch.tensor(
+            [[self.start_token] for _ in range(batch_size)], device=self.device
+        )
         samples: list[torch.Tensor] = []
         while batch.shape[0] > 0:
             out, _ = self(batch)

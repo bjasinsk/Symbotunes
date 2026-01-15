@@ -2,13 +2,7 @@ from typing import Any
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-# import lightning as L
-from loguru import logger
 from models.base import BaseModel, OutputType
-
-# from models.generator import BarGenerator
-# from models.discriminator import Discriminator
-# from models.generator import TemporalGenerator
 from .generator import BarGenerator
 from .discriminator import Discriminator
 from .generator import TemporalGenerator
@@ -25,7 +19,6 @@ class MuseGAN(BaseModel, pl.LightningModule):
         self.save_hyperparameters(ignore=['generator', 'temp_generator', 'discriminator'])
         self.discriminator = discriminator if discriminator else Discriminator()
         self.g_temp = temp_generator if temp_generator else TemporalGenerator()
-        # TODO: dodaj do configa 5
         self.config = config
         self.g_temp_tracks = nn.ModuleList([TemporalGenerator() for _ in range(config.get("g_temp_number", 5))])
         self.bar_generators = nn.ModuleList([BarGenerator() for _ in range(config.get("bar_generator_number", 5))])
@@ -36,7 +29,7 @@ class MuseGAN(BaseModel, pl.LightningModule):
         self.d_steps = training_config.get("d_steps", 1)
         self.g_steps = training_config.get("g_steps", 1)
         self.warmup_steps = training_config.get("warmup_steps", 20)
-        self.lambda_gp = training_config.get("lambda_gp", 1.0)
+        self.lambda_gp = training_config.get("lambda_gp", 10.0)
         self.lr = config.get("learning_rate", 1e-4)
         self.beta1 = config.get("beta1", 0.5)
         self.beta2 = config.get("beta2", 0.999)
@@ -44,12 +37,12 @@ class MuseGAN(BaseModel, pl.LightningModule):
 
     def forward(self, batch_size = 1):
         bars = []
-        # Pierwszy etap
+        # First stage
         z_t = self.g_temp(torch.rand(batch_size, self.g_temp.latent_dim).to(self.device))
         z_t_tracks = [g_temp_track(torch.rand(batch_size, g_temp_track.latent_dim).to(self.device)) for g_temp_track in self.g_temp_tracks]
         assert all(z_t_track.size(2) == z_t.size(2) for z_t_track in z_t_tracks)
 
-        # Drugi etap
+        # Second stage
         generated_bars = []
         for i in range(z_t.size(2)):
             z_t_squeezed = torch.squeeze(z_t[:, :, i]) if z_t.size(0) > 1 else z_t[:, :, i]
@@ -86,6 +79,7 @@ class MuseGAN(BaseModel, pl.LightningModule):
         BATCH, BAR, PITCH, NOTE, TRACK = real.shape
 
         real = real.permute(0, 4, 1, 2, 3)
+        real = 2.0 * real - 1.0 
 
         bars = self.forward(BATCH)
         bars_prepared = [torch.cat(bar, dim=1).unsqueeze(2) for bar in bars]
@@ -145,12 +139,11 @@ class MuseGAN(BaseModel, pl.LightningModule):
     def _gen_loss(self, fake: torch.Tensor) -> torch.Tensor:
         return -self.discriminator(fake).mean()
 
-    def _loss_fn(self): ...
-
     def configure_optimizers(self) -> list:
-        optimizers = []
-        optimizers.append(torch.optim.Adam(self.discriminator.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)))
-        optimizers.append(torch.optim.Adam(self.g_temp.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)))
+        optimizers = [
+            torch.optim.Adam(self.discriminator.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)),
+            torch.optim.Adam(self.g_temp.parameters(), lr=self.lr, betas=(self.beta1, self.beta2))
+        ]
         optimizers.extend([torch.optim.Adam(g_temp_track.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)) for g_temp_track in self.g_temp_tracks])
         optimizers.extend([torch.optim.Adam(bar_generator.parameters(), lr=self.lr, betas=(self.beta1, self.beta2)) for bar_generator in self.bar_generators])
         return optimizers

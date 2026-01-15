@@ -27,7 +27,15 @@ class LakhMidiDataset(BaseDataset):
         replace_if_exists: bool = False,
         **kwargs,
     ) -> None:
-        super().__init__(root, split, download, replace_if_exists, transform, target_transform, **kwargs)
+        super().__init__(
+            root,
+            split,
+            download,
+            replace_if_exists,
+            transform,
+            target_transform,
+            **kwargs,
+        )
 
         if preload:
             self._load_data()
@@ -88,7 +96,9 @@ class LakhMidiDataset(BaseDataset):
 
             for msg in track:
                 if not active_notes:
-                    previous_bar_end = self._get_next_bar_start(previous_time, ticks_per_bar)
+                    previous_bar_end = self._get_next_bar_start(
+                        previous_time, ticks_per_bar
+                    )
                     ticks_till_end_of_bar = previous_bar_end - previous_time
                     if msg.time >= ticks_till_end_of_bar + ticks_per_bar:
                         msg.time = max(1, ticks_till_end_of_bar)
@@ -121,12 +131,18 @@ class LakhMidiDataset(BaseDataset):
                     "aftertouch",
                     "pitchwheel",
                 ]:
-                    if msg.channel == 9:  # Channel 10 is reserved for drums (Ch9 for 0-indexed)
+                    if (
+                        msg.channel == 9
+                    ):  # Channel 10 is reserved for drums (Ch9 for 0-indexed)
                         continue
                     if msg.channel not in channel_tracks:
                         channel_tracks[msg.channel] = MidiTrack()
                         channel_tracks[msg.channel].append(
-                            MetaMessage("track_name", name=f"Track {i} Channel {msg.channel}", time=0)
+                            MetaMessage(
+                                "track_name",
+                                name=f"Track {i} Channel {msg.channel}",
+                                time=0,
+                            )
                         )
                     channel_tracks[msg.channel].append(msg)
                 elif msg.type == "sysex" or msg.type == "meta":
@@ -136,7 +152,9 @@ class LakhMidiDataset(BaseDataset):
         for channel, ch_track in channel_tracks.items():
             new_midi = MidiFile()
             new_midi.tracks.append(ch_track)
-            output_filename = FileUtility.get_filename_with_postfix(midi_directory, midi_filename)
+            output_filename = FileUtility.get_filename_with_postfix(
+                midi_directory, midi_filename
+            )
             new_midi.save(os.path.join(midi_directory, output_filename))
 
     def download(self) -> None:

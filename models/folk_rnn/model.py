@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pytorch_lightning as pl
 from torch.optim import RMSprop
 from torch.optim.lr_scheduler import LambdaLR
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
@@ -62,9 +61,15 @@ class FolkRNN(BaseModel):
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
         emb = self.embedding(x)
-        emb_packed = pack_padded_sequence(emb, lengths, enforce_sorted=False, batch_first=True)
-        hidden = torch.zeros((self.num_layers, x.shape[0], self.lstm_size), device=self.device)
-        state = torch.zeros((self.num_layers, x.shape[0], self.lstm_size), device=self.device)
+        emb_packed = pack_padded_sequence(
+            emb, lengths, enforce_sorted=False, batch_first=True
+        )
+        hidden = torch.zeros(
+            (self.num_layers, x.shape[0], self.lstm_size), device=self.device
+        )
+        state = torch.zeros(
+            (self.num_layers, x.shape[0], self.lstm_size), device=self.device
+        )
         out, _ = self.lstm(emb_packed, (hidden, state))
         out, _ = pad_packed_sequence(out, batch_first=True, total_length=x.shape[1])
         out = self.out(out)
@@ -73,7 +78,10 @@ class FolkRNN(BaseModel):
     def _step(self, batch) -> torch.Tensor:
         x, lengths = batch
         y = x[:, 1:]
-        mask = (torch.arange(x.shape[1], device=self.device).unsqueeze(0) < lengths.unsqueeze(1)).float()
+        mask = (
+            torch.arange(x.shape[1], device=self.device).unsqueeze(0)
+            < lengths.unsqueeze(1)
+        ).float()
         out = self(x, lengths.cpu())
         corresponding_outs = out.gather(dim=2, index=y.unsqueeze(-1)).squeeze(-1)
         log_probs = torch.log(corresponding_outs)
@@ -84,12 +92,16 @@ class FolkRNN(BaseModel):
         loss = self._step(batch)
         lr = self.optimizers().param_groups[0]["lr"]
         self.log("lr_abs", lr, prog_bar=True, logger=True, on_step=True, on_epoch=False)
-        self.log("train/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+        self.log(
+            "train/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True
+        )
         return loss
 
     def validation_step(self, batch, batch_idx):
         loss = self._step(batch)
-        self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True)
+        self.log(
+            "val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True
+        )
         return loss
 
     # fmt: off
@@ -109,8 +121,12 @@ class FolkRNN(BaseModel):
     @torch.no_grad()
     def sample(self, batch_size: int) -> list[torch.Tensor]:
         self.train()
-        batch = torch.tensor([[self.start_token] for _ in range(batch_size)], device=self.device)
-        lengths = torch.tensor([1 for _ in range(batch_size)], device=torch.device("cpu"))
+        batch = torch.tensor(
+            [[self.start_token] for _ in range(batch_size)], device=self.device
+        )
+        lengths = torch.tensor(
+            [1 for _ in range(batch_size)], device=torch.device("cpu")
+        )
         samples: list[torch.Tensor] = []
         while batch.shape[0] > 0:
             out = self(batch, lengths)

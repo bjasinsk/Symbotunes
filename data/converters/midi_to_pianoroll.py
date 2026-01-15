@@ -13,12 +13,14 @@ class MidiToPianoroll(Converter):
 
     def convert_from_data(self, midi: pretty_midi.PrettyMIDI):
         return pypianoroll.from_pretty_midi(midi)
-    
+
     def save_to_file(self, data, file_path: str) -> None:
         raise NotImplementedError("save_to_file not implemented.")
 
     @staticmethod
-    def plot(pianoroll: pypianoroll.Multitrack, save_path: str, number_of_beats: int = -1):
+    def plot(
+        pianoroll: pypianoroll.Multitrack, save_path: str, number_of_beats: int = -1
+    ):
         """
         Visualise the pianoroll with matplotlib. 4 tracks or less are optimal
         Args:

@@ -7,4 +7,6 @@ class LoadMIDI(object):
         self.initial_tempo = initial_tempo
 
     def __call__(self, data: str):
-        return PrettyMIDI(midi_file=data, resolution=self.resolution, initial_tempo=self.initial_tempo)
+        return PrettyMIDI(
+            midi_file=data, resolution=self.resolution, initial_tempo=self.initial_tempo
+        )

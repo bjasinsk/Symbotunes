@@ -2,7 +2,12 @@ from typing import Callable
 from torchvision import transforms  # type: ignore[import]
 from .folk_rnn import FolkTransform
 from .file_loaders import LoadMIDI
-from .midi_transforms import MidiTokenizer, MusicVAETokenizer, SampleBars, TokSequenceToTensor
+from .midi_transforms import (
+    MidiTokenizer,
+    MusicVAETokenizer,
+    SampleBars,
+    TokSequenceToTensor,
+)
 from .sample_subsequence import SampleSubsequence
 
 

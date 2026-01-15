@@ -146,7 +146,9 @@ class FolkTokenizer:
         self.start_token = len(self.tokens)
         self.end_token = len(self.tokens) + 1
 
-    def inverse_transform(self, data: torch.Tensor, start_token_present=True, end_token_present=True) -> list[str]:
+    def inverse_transform(
+        self, data: torch.Tensor, start_token_present=True, end_token_present=True
+    ) -> list[str]:
         data = data[1:] if start_token_present else data
         data = data[:-1] if end_token_present else data
         return [self.idx2token[int(token)] for token in data]

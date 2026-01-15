@@ -27,6 +27,6 @@ class Downloader(object):
                     dl += len(data)
                     f.write(data)
                     done = int(50 * dl / total_length)
-                    sys.stdout.write(f"\r[{'=' * done}{' ' * (50-done)}]")
+                    sys.stdout.write(f"\r[{'=' * done}{' ' * (50 - done)}]")
                     sys.stdout.flush()
         print(f"\nFile saved at {os.path.dirname(file_name)}")

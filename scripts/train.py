@@ -15,7 +15,9 @@ if __name__ == "__main__":
     environ["WANDB__SERVICE_WAIT"] = "300"
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", "-p", type=Path, required=True, help="path to config file")
+    parser.add_argument(
+        "--path", "-p", type=Path, required=True, help="path to config file"
+    )
     parser.add_argument(
         "--checkpoint",
         "-c",
@@ -40,7 +42,9 @@ if __name__ == "__main__":
 
     model_type = get_model(config.model.get("model_type"))
     if checkpoint_path is not None:
-        model = model_type.load_from_checkpoint(checkpoint_path, **config.model.get("params", dict()))
+        model = model_type.load_from_checkpoint(
+            checkpoint_path, **config.model.get("params", dict())
+        )
     else:
         model = model_type(**config.model.get("params", dict()))
 
@@ -54,9 +58,13 @@ if __name__ == "__main__":
     }
 
     tags = []  # type: ignore[var-annotated]
-    trainer_kwargs["logger"] = WandbLogger(name=nowname, id=nowname, tags=tags, project="Symbotunes")  # type: ignore
+    trainer_kwargs["logger"] = WandbLogger(
+        name=nowname, id=nowname, tags=tags, project="Symbotunes"
+    )  # type: ignore
     callback_cfg = config.get("callbacks", OmegaConf.create())  # type: ignore[arg-type]
-    trainer_kwargs["callbacks"] = get_callbacks(config.callbacks, common_callbacks_kwargs)  # type: ignore
+    trainer_kwargs["callbacks"] = get_callbacks(
+        config.callbacks, common_callbacks_kwargs
+    )  # type: ignore
 
     trainer = pl.Trainer(**trainer_kwargs)  # type: ignore[arg-type]
 
