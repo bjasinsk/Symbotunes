@@ -6,7 +6,6 @@ from data.converters.abc_to_midi_converter import ABCTOMidiConverter
 from data.converters.pianoroll_to_midi import PianorollToMidi
 
 
-# TODO: Add tokenizer abstraction here for an optional argument.
 def produce_converter(
     src_output_type: OutputType, dst_output_type: OutputType, tokenizer=None
 ) -> Converter:

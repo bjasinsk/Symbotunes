@@ -2,6 +2,7 @@ from typing import Any
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
+import numpy as np
 from models.base import BaseModel, OutputType
 from .generator import BarGenerator
 from .discriminator import Discriminator
@@ -80,6 +81,7 @@ class MuseGAN(BaseModel, pl.LightningModule):
 
         real = real.permute(0, 4, 1, 2, 3)
         real = 2.0 * real - 1.0 
+
 
         bars = self.forward(BATCH)
         bars_prepared = [torch.cat(bar, dim=1).unsqueeze(2) for bar in bars]

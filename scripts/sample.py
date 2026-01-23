@@ -8,6 +8,8 @@ from data.datasets.for_musegan import MuseGANDatasetPP
 from models import get_model
 from models.base import OutputType
 from data.converters.converter_factory import produce_converter
+import numpy as np
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -50,7 +52,7 @@ if __name__ == "__main__":
     model.eval()
     samples = model.sample(batch_size)
 
-    # TODO handle other tokenizers. Maybe read the what tokenizer should be used from config somehow. Otherwise, if
+    # TODO: handle other tokenizers. Maybe read the what tokenizer should be used from config somehow. Otherwise, if
     # getting tokenizer type from config file is ugly then either add argument to argparser, or even add the
     # converter to config file. Or maybe do something else entirely, I dunno.
 

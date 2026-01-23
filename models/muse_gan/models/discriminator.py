@@ -8,25 +8,25 @@ class Discriminator(nn.Module):
         self.in_channels = in_channels
         self.conv_block = nn.Sequential(
             nn.Conv3d(self.in_channels, 128, (2, 1, 1), (1, 1, 1)),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2),
             nn.Conv3d(128, 128, (3, 1, 1), (1, 1, 1)),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2),
             nn.Conv3d(128, 128, (1, 1, 12), (1, 1, 12)),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2),
             nn.Conv3d(128, 128, (1, 1, 7), (1, 1, 7)),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2),
             nn.Conv3d(128, 128, (1, 2, 1), (1, 2, 1)),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2),
             nn.Conv3d(128, 128, (1, 2, 1), (1, 2, 1)),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2),
             nn.Conv3d(128, 256, (1, 4, 1), (1, 2, 1)),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2),
             nn.Conv3d(256, 512, (1, 3, 1), (1, 2, 1)),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2),
         )
         self.lin_block = nn.Sequential(
             nn.Linear(1024, 1024),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.LeakyReLU(0.2),
             nn.Linear(1024, out_channels),
         )
 
