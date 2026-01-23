@@ -12,12 +12,12 @@ class TemporalGenerator(nn.Module):
                 in_channels=latent_dim, out_channels=1024, kernel_size=2, stride=2
             ),
             nn.BatchNorm1d(1024),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.ConvTranspose1d(
                 in_channels=1024, out_channels=output_dim, kernel_size=3, stride=1
             ),
             nn.BatchNorm1d(self.output_dim),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
         )
 
     def forward(self, x: torch.Tensor):  # # B x 32
@@ -38,39 +38,38 @@ class BarGenerator(nn.Module):
                 stride=(2, 1),
             ),
             nn.BatchNorm2d(1024),
-            nn.ReLU(True),
+            nn.ReLU(),
             nn.ConvTranspose2d(
                 in_channels=1024, out_channels=512, kernel_size=(2, 1), stride=(2, 1)
             ),
             nn.BatchNorm2d(512),
-            nn.ReLU(True),
+            nn.ReLU(),
             nn.ConvTranspose2d(
                 in_channels=512, out_channels=256, kernel_size=(2, 1), stride=(2, 1)
             ),
             nn.BatchNorm2d(256),
-            nn.ReLU(True),
+            nn.ReLU(),
             nn.ConvTranspose2d(
                 in_channels=256, out_channels=256, kernel_size=(2, 1), stride=(2, 1)
             ),
             nn.BatchNorm2d(256),
-            nn.ReLU(True),
+            nn.ReLU(),
             nn.ConvTranspose2d(
                 in_channels=256, out_channels=128, kernel_size=(3, 1), stride=(3, 1)
             ),
             nn.BatchNorm2d(128),
-            nn.ReLU(True),
+            nn.ReLU(),
             nn.ConvTranspose2d(
                 in_channels=128, out_channels=64, kernel_size=(1, 7), stride=(1, 7)
             ),
             nn.BatchNorm2d(64),
-            nn.ReLU(True),
+            nn.ReLU(),
             nn.ConvTranspose2d(
                 in_channels=64,
                 out_channels=out_channels,
                 kernel_size=(1, 12),
                 stride=(1, 12),
             ),
-            nn.BatchNorm2d(out_channels),
             nn.Tanh(),
         )
 

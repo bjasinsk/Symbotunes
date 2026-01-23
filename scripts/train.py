@@ -5,11 +5,13 @@ from pytorch_lightning.loggers import WandbLogger
 from os import environ
 from pathlib import Path
 import datetime
+import torch
 
 from data import get_dataloaders
 from models import get_model
 from callbacks import get_callbacks
 
+torch.set_float32_matmul_precision('high')
 
 if __name__ == "__main__":
     environ["WANDB__SERVICE_WAIT"] = "300"

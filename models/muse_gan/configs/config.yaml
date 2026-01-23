@@ -22,13 +22,13 @@ model:
 
       optimizer:
         generator:
-          learning_rate: 0.0002
+          learning_rate: 1e-4
           beta1: 0.5
-          beta2: 0.999
+          beta2: 0.9
         discriminator:
-          learning_rate: 0.0002
+          learning_rate: 1e-4
           beta1: 0.5
-          beta2: 0.999
+          beta2: 0.9
 
       training:
             max_steps: 1000
@@ -41,11 +41,10 @@ model:
 
 dataloaders:
   validation:
-    name: "folk-rnn"
+    name: "for_musegan"
     root: "_data"
     split: "test"
     download: True
-    data_type: "tokenized_ABC"
     transforms:
       - folk_rnn:    
     batch_size: 128
@@ -58,7 +57,6 @@ dataloaders:
         root: "_data"
         split: "train"
         download: False
-        data_type: "tokenized_ABC"
         transforms:
           - folk_rnn:
         

@@ -2,40 +2,10 @@ import numpy as np
 import torch
 import random
 import os
-from torch.utils.data import DataLoader
 
 from .base import BaseDataset
 import gdown
 from typing import Callable
-
-MAX_TRUNCATE_LEN = 8192
-
-
-def load_data_from_npy(filename):
-    return np.load(filename, allow_pickle=True)
-
-
-def load_data_from_npz(filename):
-    """Load and return dense piano-roll data from a sparse npz."""
-    with np.load(filename, allow_pickle=True) as f:
-        data = np.zeros(f["shape"], np.bool_)
-    return data[:MAX_TRUNCATE_LEN].astype(np.float32)
-
-
-def load_data(data_source, data_filename):
-    """Dispatch to appropriate loader."""
-    if data_source == "npy":
-        return load_data_from_npy(data_filename)
-    elif data_source == "npz":
-        return load_data_from_npz(data_filename)
-    else:
-        raise ValueError("data_source must be 'npy' or 'npz'")
-
-def random_transpose(pianoroll, semitone_range=(-5, 5)):
-    """Transpose the pianoroll randomly in pitch (shift along pitch axis)."""
-    shift = random.randint(*semitone_range)
-    pianoroll = np.roll(pianoroll, shift, axis=-1)
-    return pianoroll
 
 
 class MuseGANDatasetPP(BaseDataset):
@@ -79,7 +49,7 @@ class MuseGANDatasetPP(BaseDataset):
         self.normalize = normalize
         self.expected_tracks = expected_tracks
 
-        shape_path, nonzero_path = self._create_path()
+        nonzero_path, shape_path = self._create_path()
 
         self.nonzero = np.load(nonzero_path, mmap_mode="r", allow_pickle=True)
         self.full_shape = np.load(shape_path)
@@ -130,27 +100,3 @@ class MuseGANDatasetPP(BaseDataset):
             os.makedirs(os.path.dirname(path), exist_ok=True)
             gdown.download(url, path, quiet=False)
 
-if __name__ == "__main__":
-    data_path = "training_data/train_x_lpd_5_phr.npz"
-
-    dataset = MuseGANDatasetPP(
-        data_path=data_path,
-        use_random_transpose=True,
-        normalize=True,
-        expected_tracks=5,
-        data_source=data_path.split(".")[-1],
-    )
-
-    dataloader = DataLoader(
-        dataset,
-        batch_size=8,
-        shuffle=True,
-        num_workers=2,
-        drop_last=True,
-        prefetch_factor=2,
-    )
-
-    for batch in dataloader:
-        # batch.shape = [batch_size, tracks, time, pitch]
-        print("Batch shape:", batch.shape)
-        break
